@@ -1,0 +1,176 @@
+#Pick a file and then convert it to sound.
+sound1 = pickAFile()
+sound1 = makeSound(sound1)
+sound2 = pickAFile()
+sound2 = makeSound(sound2)
+num = 1
+delay = 600
+#Calls the function increaseVolume.
+increaseVolume(sound1, sound2)
+
+#Calls the function decreaseVolume.
+decreaseVolume(sound1, sound2)
+
+#Calls the function blend.
+blend(sound1, sound2)
+
+#Calls the echo function with a delay of 60000. The more the delay is, the more noticeable the delay becomes.
+#Depending on the audio, the delay has to be changed for it to work properly.
+echo(sound1, 60000)
+
+#Increase volume function that takes in the sound1 and sound2.
+
+def increaseVolume(sound1, sound2):
+ #Loops through from index 0 to half the length of sound1.
+ for sampleIndex in range(0,getLength(sound1)/2):
+ 
+   #Changes value as the for loop continues.
+   value = getSampleValueAt(sound1,sampleIndex)
+   
+   #Sets the sample value and increases the amplitude.
+   #Depending on the sound change the increase.
+   setSampleValueAt(sound1,sampleIndex,value * .5)
+ 
+ #Loops through from index 0 to half the length of sound2.
+ for sampleIndex in range(0,getLength(sound2)/2):
+ 
+   #Changes value as the for loop continues.
+   value = getSampleValueAt(sound2,sampleIndex)
+   
+   #Sets the sample value and increases the amplitude.
+   #Depending on the sound change the increase.
+   setSampleValueAt(sound2,sampleIndex,value * .5)
+   
+
+#Decrease volume function that takes in the sound1 and sound2.
+def decreaseVolume(sound1, sound2):
+ #Loops through from index half the length to the end of the sound1.
+ for sampleIndex in range(getLength(sound1)/2,getLength(sound1)): 
+ 
+      #Changes value as the for loop continues.
+      value = getSampleValueAt(sound1,sampleIndex)
+      
+      #Sets the sample value and decreases the amplitude.
+      setSampleValueAt(sound1,sampleIndex,value * 0.2)
+  
+ #Loops through from index half the length to the end of the sound2.
+ for sampleIndex in range(getLength(sound2)/2,getLength(sound2)): 
+ 
+      #Changes value as the for loop continues.
+      value = getSampleValueAt(sound2,sampleIndex)
+      
+      #Sets the sample value and decreases the amplitude.
+      setSampleValueAt(sound2,sampleIndex,value * 0.2)  
+        
+
+#Create a blend function that takes in two arguments.
+#Blending two sounds must account for the possibility that the two sounds are of unequal length.
+def blend(sound1, sound2):
+   #If sound 1 is smaller than sound 2.
+   
+   if sound1.getLength() < sound2.getLength():
+      #Stores the smaller sound.
+      smallSound = sound1
+      
+      #Stores the larger sound.
+      largeSound = sound2
+      
+   #Else sound 2 is smaller than sound 1.
+   else:
+      #Stores the smaller sound.
+      smallSound = sound2
+      
+      #Stores the larger sound.
+      largeSound = sound1
+      
+   #Position set to 0.
+   pos = 0
+   
+   #Loop through 
+   for sample in smallSound.getSamples():
+      #Sets the large sample.
+      largeSample = largeSound.getSample(pos)
+      
+      #Adding the sample values in the shorter sound to the corresponding samples.
+      newValue = largeSample.getValue() + sample.getValue()
+      
+      #Sets the value.
+      largeSample.setValue(newValue)
+      #Increases postion by 1.
+      
+      pos += 1
+      
+   return largeSound
+   
+
+#Echo function takes in sound and delay parameters.   
+def echo(sound1, delay):
+   #Stores sound into newSound.
+   newSound = sound1
+   
+   #Postion becomes the delay + 1.
+   pos = delay + 1
+   
+   #While postion is less than sound length it will continue to loop.
+   while pos < sound1.getLength():
+   
+      #Gets sample postion - delay from newSound
+      echoedSample = newSound.getSample(pos - delay)
+      
+      #Gets the value multiplies it 0.6 and converts to int.
+      echoedValue = int(0.6 * echoedSample.getValue())
+      
+      #Stores the current sample position.
+      currentSample = sound1.getSample(pos)
+      
+      #Sets the value with the currentSample value plus echoedValue.
+      currentSample.setValue(currentSample.getValue() + echoedValue)
+      
+      #Position will increase by 1.
+      pos += 1  
+ 
+
+#play(sound1) TEST PURPOSE
+#this function plays the fadeOut of the sound
+
+def fadeOut( sound3, delay, num ) :
+
+  sound1rate = getSamplingRate(sound3)
+
+  endSound1 = getLength( sound3 )
+  
+  sound4 = makeEmptySound( endSound1 * (num + 1) + num * int(delay * sound1rate) ) 
+  
+  endSound2 = getLength( sound4 )
+  
+  fadeAmplitude = 1.0
+  
+  position2 = 0
+  
+  for echoCount in range( 0, num + 1 ) :
+  
+    for position1 in range( 0, endSound1-1 ) :
+    
+      valueSound1 = getSampleValueAt( sound3, position1) * fadeAmplitude
+      
+      setSampleValueAt( sound4, position2, valueSound1 )
+      
+      position2 = position2 + 1
+      
+    if (echoCount < num):
+    
+      for pause in range(0, int(sound1rate * delay)):
+      
+        setSampleValueAt( sound4, position2, 0 )
+        
+        position2 = position2 + 1
+        
+    fadeAmplitude = fadeAmplitude * 0.6
+
+  return sound4
+  
+
+#this plays final sound that has been altered
+finalSound = fadeOut(sound1, 100, num)
+
+play(finalSound)
